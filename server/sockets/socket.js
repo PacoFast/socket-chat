@@ -18,15 +18,17 @@ io.on('connection', (client) => {
 				//Add a new person
 				let personas = usuarios.agregarPersona(client.id, data.nombre, data.sala); 	
 				client.broadcast.to(data.sala).emit('listaPersona', usuarios.getPersonaPorSala(data.sala));
+				client.broadcast.to(data.sala).emit('crearMensaje', crearMensaje('Administrador', `${data.nombre} se unio`));	
 				//Sending the new person as response
 				callback(usuarios.getPersonaPorSala(data.sala)); 
 		});
 		//Send a message to clients in a room
-		client.on('crearMensaje', (data) =>{
+		client.on('crearMensaje', (data, callback) =>{
 			//Get a person with the client id
 			let persona = usuarios.getPersona(client.id); 
 			let mensaje = crearMensaje(persona.nombre, data.mensaje);
 			client.broadcast.to(persona.sala).emit('crearMensaje', mensaje); 	
+			callback(mensaje);
 		});
 
 		client.on('disconnect', () =>{
@@ -37,7 +39,7 @@ io.on('connection', (client) => {
 					return new Error(); 
 				}
 				//Emiting a message to the whole room
-				client.broadcast.to(personaBorrada.sala).emit('crearMensaje', crearMensaje(personaBorrada.nombre, `${personaBorrada.nombre} salió`)); 
+				client.broadcast.to(personaBorrada.sala).emit('crearMensaje', crearMensaje('Administrador', `${personaBorrada.nombre} salió`)); 
 				//Showing a message to the other clients the actual list in the room
 				client.broadcast.to(personaBorrada.sala).emit('listaPersona', usuarios.getPersonaPorSala(personaBorrada.sala));   
 
